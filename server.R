@@ -21,7 +21,50 @@ setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
 key = "acf0a65de0967a683856519de8b80921"
 
-geoinfo_state = data.frame("State" = "North Carolina", "Geo" = "35.227085,-80.843124,100000mi")
+geoinfo_state = data.frame("State" = c("Alabama", "Alaska", "Arizona", "Arkansas",
+                                       "California", "Colorado", "Connecticut",
+                                       "Delaware", "Florida", "Georgia", "Hawaii",
+                                       "Idaho", "Illinois", "Indiana", "Iowa", "Kansas",
+                                       "Kentucky", "Louisiana", "Maine", "Maryland",
+                                       "Massachusetts", "Michigan", "Minnesota",
+                                       "Mississippi", "Missouri", "Montana", "Nebraska",
+                                       "Nevada", "New Hampshire", "New Jersey",
+                                       "New Mexico", "New York", "North Carolina",
+                                       "North Dakota", "Ohio", "Oklahoma", "Oregon",
+                                       "Pennsylvania", "Rhode Island", "South Carolina",
+                                       "South Dakota", "Tennessee", "Texas", "Utah",
+                                       "Vermont", "Virginia", "Washington", "West Virginia",
+                                       "Wisconsin", "Wyoming"),
+                           "Geo" = c("32.31823,-86.9023,350mi","64.20084,-149.4937,350mi",
+                                     "34.04893,-111.0937,350mi","35.20105,-91.83183,350mi",
+                                     "36.77826,-119.4179,350mi","39.55005,-105.7821,350mi",
+                                     "41.60322,-73.08775,350mi","38.91083,-75.52767,350mi",
+                                     "27.66483,-81.51575,350mi","32.16562,-82.90008,350mi",
+                                     "19.89677,-155.5828,350mi","44.0682,-114.742,350mi",
+                                     "40.63312,-89.39853,350mi","40.26719,-86.1349,350mi",
+                                     "41.878,-93.0977,350mi","39.0119,-98.48425,350mi",
+                                     "37.83933,-84.27002,350mi","30.9843,-91.96233,350mi",
+                                     "45.25378,-69.44547,350mi","39.04575,-76.64127,350mi",
+                                     "42.40721,-71.38244,350mi","44.31484,-85.60236,350mi",
+                                     "46.72955,-94.6859,350mi","32.35467,-89.39853,350mi",
+                                     "37.96425,-91.83183,350mi","46.87968,-110.3626,350mi",
+                                     "41.49254,-99.90181,350mi","38.80261,-116.4194,350mi",
+                                     "43.19385,-71.5724,350mi","40.05832,-74.40566,350mi",
+                                     "34.51994,-105.8701,350mi","40.71278,-74.00594,350mi",
+                                     "35.75957,-79.0193,350mi","47.55149,-101.002,350mi",
+                                     "40.41729,-82.90712,350mi","35.46756,-97.51643,350mi",
+                                     "43.80413,-120.5542,350mi","41.20332,-77.19452,350mi",
+                                     "41.58009,-71.47743,350mi","33.83608,-81.16372,350mi",
+                                     "43.96951,-99.90181,350mi","35.51749,-86.58045,350mi",
+                                     "31.9686,-99.90181,350mi","39.32098,-111.0937,350mi",
+                                     "44.5588,-72.57784,350mi","37.43157,-78.65689,350mi",
+                                     "38.90719,-77.03687,350mi","38.59763,-80.4549,350mi",
+                                     "43.78444,-88.78787,350mi","43.07597,-107.2903,350mi"),
+                           "StateAbb" = c("AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","IA",
+                                       "IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS",
+                                       "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK",
+                                       "OG","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
+                                       "WI","WY"))
 
 
 shinyServer(
@@ -93,7 +136,7 @@ shinyServer(
 
         ###########################################################
 
-        db_key <- "acf0a65de0967a683856519de8b80921"
+        db_key <- "da81488559b8434a537834dd9bc09e8e"
 
         print("Getting tweets...")
         keyword = input$Keywd
@@ -168,21 +211,79 @@ shinyServer(
 
 
 
-    #Based on different states
+####################################################################################
+
+
+#Based on different states
 
     statewise = reactive(
       {
+        getSentiment <- function (text, key){
+
+          text <- URLencode(text);
+
+          #save all the spaces, then get rid of the weird characters that break the API, then convert back the URL-encoded spaces.
+          text <- str_replace_all(text, "%20", " ");
+          text <- str_replace_all(text, "%\\d\\d", "");
+          text <- str_replace_all(text, " ", "%20");
 
 
+          if (str_length(text) > 360){
+            text <- substr(text, 0, 359);
+          }
+          ##########################################
+
+          data <- getURL(paste("http://api.datumbox.com/1.0/TwitterSentimentAnalysis.json?api_key=", key, "&text=",text, sep=""))
+
+          js <- fromJSON(data);
+
+          # get mood probability
+          sentiment = js$output$result
+
+          ###################################
+
+
+          return(list(sentiment=sentiment))
+        }
+
+        clean.text <- function(some_txt)
+        {
+          some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
+          some_txt = gsub("@\\w+", "", some_txt)
+          some_txt = gsub("[[:punct:]]", "", some_txt)
+          some_txt = gsub("[[:digit:]]", "", some_txt)
+          some_txt = gsub("http\\w+", "", some_txt)
+          some_txt = gsub("[ \t]{2,}", "", some_txt)
+          some_txt = gsub("^\\s+|\\s+$", "", some_txt)
+          some_txt = gsub("amp", "", some_txt)
+          # define "tolower error handling" function
+          try.tolower = function(x)
+          {
+            y = NA
+            try_error = tryCatch(tolower(x), error=function(e) e)
+            if (!inherits(try_error, "error"))
+              y = tolower(x)
+            return(y)
+          }
+
+          some_txt = sapply(some_txt, try.tolower)
+          some_txt = some_txt[some_txt != ""]
+          names(some_txt) = NULL
+          return(some_txt)
+        }
+
+
+
+        ###########################################################
         geocode_state = geoinfo_state[which(geoinfo_state$State==input$State),2]
         ###########################################################
 
-        db_key <- "acf0a65de0967a683856519de8b80921"
+        db_key <- "da81488559b8434a537834dd9bc09e8e"
 
         print("Getting tweets...")
         keyword = input$Keywd
         # get some tweets
-        tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(geocode_state) )
+        tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(geocode_state))
         # get text
         tweet_txt = sapply(tweets, function(x) x$getText())
 
@@ -247,6 +348,153 @@ shinyServer(
         cpCloud = comparison.cloud(tdm, colors = brewer.pal(nemo, "Dark2"),
                                    scale = c(3,.5), random.order = FALSE, title.size = 1.5)
         cpCloud
+      })
+
+
+
+
+####################################################################################
+ #all state sentiment
+
+    statewiseSent = reactive(
+      {
+
+        getSentiment <- function (text, key){
+
+          text <- URLencode(text);
+
+          #save all the spaces, then get rid of the weird characters that break the API, then convert back the URL-encoded spaces.
+          text <- str_replace_all(text, "%20", " ");
+          text <- str_replace_all(text, "%\\d\\d", "");
+          text <- str_replace_all(text, " ", "%20");
+
+
+          if (str_length(text) > 360){
+            text <- substr(text, 0, 359);
+          }
+          ##########################################
+
+          data <- getURL(paste("http://api.datumbox.com/1.0/TwitterSentimentAnalysis.json?api_key=", key, "&text=",text, sep=""))
+
+          js <- fromJSON(data);
+
+          # get mood probability
+          sentiment = js$output$result
+
+          ###################################
+
+
+          return(list(sentiment=sentiment))
+        }
+
+        clean.text <- function(some_txt)
+        {
+          some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
+          some_txt = gsub("@\\w+", "", some_txt)
+          some_txt = gsub("[[:punct:]]", "", some_txt)
+          some_txt = gsub("[[:digit:]]", "", some_txt)
+          some_txt = gsub("http\\w+", "", some_txt)
+          some_txt = gsub("[ \t]{2,}", "", some_txt)
+          some_txt = gsub("^\\s+|\\s+$", "", some_txt)
+          some_txt = gsub("amp", "", some_txt)
+          # define "tolower error handling" function
+          try.tolower = function(x)
+          {
+            y = NA
+            try_error = tryCatch(tolower(x), error=function(e) e)
+            if (!inherits(try_error, "error"))
+              y = tolower(x)
+            return(y)
+          }
+
+          some_txt = sapply(some_txt, try.tolower)
+          some_txt = some_txt[some_txt != ""]
+          names(some_txt) = NULL
+          return(some_txt)
+        }
+
+        db_key <- "da81488559b8434a537834dd9bc09e8e"
+
+
+
+        ##########################################################
+
+
+        #GEO_senti = data.frame(State = NULL, negative = NA, neutral = NA, positive = NA)
+        GEO_senti = matrix(NA, 50, 4)
+
+        for (i in 1:length(geoinfo_state)){
+
+        geocode_state = geoinfo_state[i,2]
+        ###########################################################
+
+
+
+        print("Getting tweets...")
+        keyword = input$Keywd
+        # get some tweets
+        tweets = searchTwitter(keyword, 10, lang="en",geocode = paste(geocode_state) )
+        # get text
+        tweet_txt = sapply(tweets, function(x) x$getText())
+
+        # clean text
+        tweet_clean = clean.text(tweet_txt)
+        tweet_num = length(tweet_clean)
+        # data frame (text, sentiment)
+        tweet_df = data.frame(text=tweet_clean, sentiment=rep("", tweet_num),stringsAsFactors=FALSE)
+
+        print("Getting sentiments...")
+        # apply function getSentiment
+        sentiment = rep(0, tweet_num)
+        for (j in 1:tweet_num)
+        {
+          tmp = getSentiment(tweet_clean[j], db_key)
+
+          tweet_df$sentiment[j] = tmp$sentiment
+
+          print(paste(j," of ", tweet_num))
+
+
+        }
+
+        # delete rows with no sentiment
+        tweet_df <- tweet_df[tweet_df$sentiment!="",]
+
+
+        #separate text by sentiment
+        sents = levels(factor(tweet_df$sentiment))
+        #emos_label <- emos
+
+
+        # get the labels and percents
+
+        labels <-  lapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"))
+
+        #Extract the sentiments percentages
+        labels_extract = as.numeric(gsub("\\D", "", labels))/10000
+        GEO_senti[i,] = c(geoinfo_state[i,3],labels_extract[1],labels_extract[2],labels_extract[3])
+        }
+
+        GEO_senti = as.data.frame(GEO_senti)
+        colnames(GEO_senti) = c("State", "Negative", "Neutral", "Positive")
+
+
+#Draw the map
+
+
+        suppressPackageStartupMessages(library(googleVis))
+        op=options(gvis.plot.tag='chart')
+        Senti_heat = gvisGeoChart( GEO_senti, locationvar='State', colorvar = 'Positive',
+                                options=list(title="Heated map of State Sentiments",
+                                             titlevar="Title",region='US',projection="kavrayskiy-vii",numvar="Positive",
+                                             displayMode="regions", resolution="provinces",
+                                             colorAxis="{colors:['yellow','red']}",width=650, height=400))
+
+        T <- gvisTable(GEO_senti,
+                       options=list(width=270, height=400))
+
+        GT <- gvisMerge(Senti_heat,T, horizontal=TRUE)
+        plot(GT)
       }
     )
 
@@ -306,6 +554,12 @@ shinyServer(
     output$state_cloud = renderPlot(
       {
         print(statewise())
+      }
+    )
+
+    output$state_Sent  = renderPlot(
+      {
+        statewiseSent()
       }
     )
 
