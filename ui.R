@@ -14,8 +14,7 @@ shinyUI(
       h4('Keyword:'),
       textInput('Keywd', "Search keyword", value = "Paris"),
       hr(),
-      actionButton("go", "Go"),
-      hr(),
+
       selectInput('State', 'State:', c("Alabama", "Alaska", "Arizona", "Arkansas",
                                        "California", "Colorado", "Connecticut",
                                        "Delaware", "Florida", "Georgia", "Hawaii",
@@ -30,6 +29,8 @@ shinyUI(
                                        "South Dakota", "Tennessee", "Texas", "Utah",
                                        "Vermont", "Virginia", "Washington", "West Virginia",
                                        "Wisconsin", "Wyoming")),
+      hr(),
+      actionButton("go", "Let's Search"),
       hr()
     ),
     mainPanel(

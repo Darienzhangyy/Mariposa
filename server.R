@@ -547,19 +547,22 @@ shinyServer(
     # Plot all prior distributions, with lines marking the 95% CI and median values.
     output$overall_cloud = renderPlot(
       {
-        print(overall())
+        if (input$go){
+        print(overall())}
       }
     )
 
     output$state_cloud = renderPlot(
       {
-        print(statewise())
+        if (input$go){
+        print(statewise())}
       }
     )
 
     output$state_Sent  = renderPlot(
       {
-        statewiseSent()
+        if (input$go){
+        statewiseSent()}
       }
     )
 
