@@ -357,7 +357,50 @@ shinyServer(
         cpCloud
       })
 
-
+      trends = reactive(
+        {
+          clean.text <- function(some_txt)
+          {
+            some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
+            some_txt = gsub("@\\w+", "", some_txt)
+            some_txt = gsub("[[:punct:]]", "", some_txt)
+            some_txt = gsub("[[:digit:]]", "", some_txt)
+            some_txt = gsub("http\\w+", "", some_txt)
+            some_txt = gsub("[ \t]{2,}", "", some_txt)
+            some_txt = gsub("^\\s+|\\s+$", "", some_txt)
+            some_txt = gsub("amp", "", some_txt)
+            # define "tolower error handling" function
+            try.tolower = function(x)
+            {
+              y = NA
+              try_error = tryCatch(tolower(x), error=function(e) e)
+              if (!inherits(try_error, "error"))
+                y = tolower(x)
+              return(y)
+            }
+            
+            some_txt = sapply(some_txt, try.tolower)
+            some_txt = some_txt[some_txt != ""]
+            names(some_txt) = NULL
+            return(some_txt)
+          }
+          trends <- getTrends(usid$woeid[which(usid$City == input$City)])
+          Trend <- trends$name
+          trend1 <- searchTwitter(Trend[1], n = 200, lang = "en")
+          trend1_text <- sapply(trend1, function(x) x$getText())
+          cleaned_trend <- clean.text(trend1_text)
+          trend1_corpus <- Corpus(VectorSource(cleaned_trend))
+          tdm = TermDocumentMatrix(trend1_corpus, 
+                                   control = list(removePunctuation = TRUE,stopwords = c(Trend[1], stopwords("english")), 
+                                                  removeNumbers = TRUE, tolower = TRUE))
+          m = as.matrix(tdm)
+          word_freqs = sort(rowSums(m), decreasing = TRUE)
+          dm = data.frame(word = names(word_freqs), freq = word_freqs)
+          
+          wordcloud(dm$word, dm$freq, random.order = FALSE, colors=brewer.pal(8, "Dark2"), 
+                    scale = c(4, .75))
+        }
+      )
 
 
 ####################################################################################
@@ -575,6 +618,12 @@ shinyServer(
         
       }
     )
+      
+    output$trend_plot = renderPlot(
+        {
+          print(trends())
+        }
+        )
     
 
     # Create a data frame containing the 95% CI and median for all posteriors.

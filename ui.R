@@ -35,7 +35,8 @@ shinyUI(
       hr(),
       actionButton("go", "Let's Search"),
       hr(),
-      selectInput('City', 'City:', city),
+      h4("Trending:"),
+      selectInput('City', 'City', city),
       hr()
     ),
     mainPanel(
@@ -51,7 +52,10 @@ shinyUI(
       h4('Trends:'),
       tags$head(tags$style( HTML('#mytable table {border-collapse:collapse; } 
                              #mytable table th { transform: rotate(-0deg)}'))),
-      column(12,tableOutput("trendtable"))
+      column(12,tableOutput("trendtable")),
+      br(),
+      h4('Trend word cloud'),
+      plotOutput('trend_plot')
 
 #       h4('Posteriors:'),
 #       plotOutput('all_posterior'),
