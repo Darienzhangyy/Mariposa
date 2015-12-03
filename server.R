@@ -9,6 +9,8 @@ library(RCurl)
 library(rjson)
 library(tm)
 library(wordcloud)
+library(foreach)
+
 api_key <- "hftNGPFqzf9GMnHLMQVnNV7Vz"
 
 api_secret <- "HjTPQByqFDdriKKEixRbm4UNn2golHR5qGPbrPogRDm0tQkFua"
@@ -136,7 +138,7 @@ shinyServer(
 
         ###########################################################
 
-        db_key <- "da81488559b8434a537834dd9bc09e8e"
+        db_key <- "804ab73cf3d214af5dc587c8198daa33"
 
         print("Getting tweets...")
         keyword = input$Keywd
@@ -154,7 +156,8 @@ shinyServer(
         print("Getting sentiments...")
         # apply function getSentiment
         sentiment = rep(0, tweet_num)
-        for (i in 1:tweet_num)
+        
+        foreach(i=1:tweet_num) %dopar%
         {
           tmp = getSentiment(tweet_clean[i], db_key)
 
@@ -176,13 +179,14 @@ shinyServer(
 
         # get the labels and percents
 
-        labels <-  lapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"))
+        labels <-  mclapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"), mc.cores=8)
 
 
 
         nemo = length(sents)
         emo.docs = rep("", nemo)
-        for (i in 1:nemo)
+        
+        foreach(i=1:nemo) %dopar%
         {
           tmp = tweet_df[tweet_df$sentiment == sents[i],]$text
 
@@ -278,7 +282,7 @@ shinyServer(
         geocode_state = geoinfo_state[which(geoinfo_state$State==input$State),2]
         ###########################################################
 
-        db_key <- "da81488559b8434a537834dd9bc09e8e"
+        db_key <- "804ab73cf3d214af5dc587c8198daa33"
 
         print("Getting tweets...")
         keyword = input$Keywd
@@ -296,7 +300,7 @@ shinyServer(
         print("Getting sentiments...")
         # apply function getSentiment
         sentiment = rep(0, tweet_num)
-        for (i in 1:tweet_num)
+        foreach(i=1:tweet_num) %dopar%
         {
           tmp = getSentiment(tweet_clean[i], db_key)
 
@@ -318,13 +322,13 @@ shinyServer(
 
         # get the labels and percents
 
-        labels <-  lapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"))
+        labels <-  mclapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"), mc.cores = 8)
 
 
 
         nemo = length(sents)
         emo.docs = rep("", nemo)
-        for (i in 1:nemo)
+        foreach (i=1:nemo) %dopar%
         {
           tmp = tweet_df[tweet_df$sentiment == sents[i],]$text
 
@@ -356,147 +360,147 @@ shinyServer(
 ####################################################################################
  #all state sentiment
 
-    statewiseSent = reactive(
-      {
-
-        getSentiment <- function (text, key){
-
-          text <- URLencode(text);
-
-          #save all the spaces, then get rid of the weird characters that break the API, then convert back the URL-encoded spaces.
-          text <- str_replace_all(text, "%20", " ");
-          text <- str_replace_all(text, "%\\d\\d", "");
-          text <- str_replace_all(text, " ", "%20");
-
-
-          if (str_length(text) > 360){
-            text <- substr(text, 0, 359);
-          }
-          ##########################################
-
-          data <- getURL(paste("http://api.datumbox.com/1.0/TwitterSentimentAnalysis.json?api_key=", key, "&text=",text, sep=""))
-
-          js <- fromJSON(data);
-
-          # get mood probability
-          sentiment = js$output$result
-
-          ###################################
-
-
-          return(list(sentiment=sentiment))
-        }
-
-        clean.text <- function(some_txt)
-        {
-          some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
-          some_txt = gsub("@\\w+", "", some_txt)
-          some_txt = gsub("[[:punct:]]", "", some_txt)
-          some_txt = gsub("[[:digit:]]", "", some_txt)
-          some_txt = gsub("http\\w+", "", some_txt)
-          some_txt = gsub("[ \t]{2,}", "", some_txt)
-          some_txt = gsub("^\\s+|\\s+$", "", some_txt)
-          some_txt = gsub("amp", "", some_txt)
-          # define "tolower error handling" function
-          try.tolower = function(x)
-          {
-            y = NA
-            try_error = tryCatch(tolower(x), error=function(e) e)
-            if (!inherits(try_error, "error"))
-              y = tolower(x)
-            return(y)
-          }
-
-          some_txt = sapply(some_txt, try.tolower)
-          some_txt = some_txt[some_txt != ""]
-          names(some_txt) = NULL
-          return(some_txt)
-        }
-
-        db_key <- "da81488559b8434a537834dd9bc09e8e"
-
-
-
-        ##########################################################
-
-
-        #GEO_senti = data.frame(State = NULL, negative = NA, neutral = NA, positive = NA)
-        GEO_senti = matrix(NA, 50, 4)
-
-        for (i in 1:length(geoinfo_state)){
-
-        geocode_state = geoinfo_state[i,2]
-        ###########################################################
-
-
-
-        print("Getting tweets...")
-        keyword = input$Keywd
-        # get some tweets
-        tweets = searchTwitter(keyword, 10, lang="en",geocode = paste(geocode_state) )
-        # get text
-        tweet_txt = sapply(tweets, function(x) x$getText())
-
-        # clean text
-        tweet_clean = clean.text(tweet_txt)
-        tweet_num = length(tweet_clean)
-        # data frame (text, sentiment)
-        tweet_df = data.frame(text=tweet_clean, sentiment=rep("", tweet_num),stringsAsFactors=FALSE)
-
-        print("Getting sentiments...")
-        # apply function getSentiment
-        sentiment = rep(0, tweet_num)
-        for (j in 1:tweet_num)
-        {
-          tmp = getSentiment(tweet_clean[j], db_key)
-
-          tweet_df$sentiment[j] = tmp$sentiment
-
-          print(paste(j," of ", tweet_num))
-
-
-        }
-
-        # delete rows with no sentiment
-        tweet_df <- tweet_df[tweet_df$sentiment!="",]
-
-
-        #separate text by sentiment
-        sents = levels(factor(tweet_df$sentiment))
-        #emos_label <- emos
-
-
-        # get the labels and percents
-
-        labels <-  lapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"))
-
-        #Extract the sentiments percentages
-        labels_extract = as.numeric(gsub("\\D", "", labels))/10000
-        GEO_senti[i,] = c(geoinfo_state[i,3],labels_extract[1],labels_extract[2],labels_extract[3])
-        }
-
-        GEO_senti = as.data.frame(GEO_senti)
-        colnames(GEO_senti) = c("State", "Negative", "Neutral", "Positive")
-
-
-#Draw the map
-
-
-        suppressPackageStartupMessages(library(googleVis))
-        op=options(gvis.plot.tag='chart')
-        Senti_heat = gvisGeoChart( GEO_senti, locationvar='State', colorvar = 'Positive',
-                                options=list(title="Heated map of State Sentiments",
-                                             titlevar="Title",region='US',projection="kavrayskiy-vii",numvar="Positive",
-                                             displayMode="regions", resolution="provinces",
-                                             colorAxis="{colors:['yellow','red']}",width=650, height=400))
-
-        T <- gvisTable(GEO_senti,
-                       options=list(width=270, height=400))
-
-        GT <- gvisMerge(Senti_heat,T, horizontal=TRUE)
-        plot(GT)
-      }
-    )
+#     statewiseSent = reactive(
+#       {
+# 
+#         getSentiment <- function (text, key){
+# 
+#           text <- URLencode(text);
+# 
+#           #save all the spaces, then get rid of the weird characters that break the API, then convert back the URL-encoded spaces.
+#           text <- str_replace_all(text, "%20", " ");
+#           text <- str_replace_all(text, "%\\d\\d", "");
+#           text <- str_replace_all(text, " ", "%20");
+# 
+# 
+#           if (str_length(text) > 360){
+#             text <- substr(text, 0, 359);
+#           }
+#           ##########################################
+# 
+#           data <- getURL(paste("http://api.datumbox.com/1.0/TwitterSentimentAnalysis.json?api_key=", key, "&text=",text, sep=""))
+# 
+#           js <- fromJSON(data);
+# 
+#           # get mood probability
+#           sentiment = js$output$result
+# 
+#           ###################################
+# 
+# 
+#           return(list(sentiment=sentiment))
+#         }
+# 
+#         clean.text <- function(some_txt)
+#         {
+#           some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
+#           some_txt = gsub("@\\w+", "", some_txt)
+#           some_txt = gsub("[[:punct:]]", "", some_txt)
+#           some_txt = gsub("[[:digit:]]", "", some_txt)
+#           some_txt = gsub("http\\w+", "", some_txt)
+#           some_txt = gsub("[ \t]{2,}", "", some_txt)
+#           some_txt = gsub("^\\s+|\\s+$", "", some_txt)
+#           some_txt = gsub("amp", "", some_txt)
+#           # define "tolower error handling" function
+#           try.tolower = function(x)
+#           {
+#             y = NA
+#             try_error = tryCatch(tolower(x), error=function(e) e)
+#             if (!inherits(try_error, "error"))
+#               y = tolower(x)
+#             return(y)
+#           }
+# 
+#           some_txt = sapply(some_txt, try.tolower)
+#           some_txt = some_txt[some_txt != ""]
+#           names(some_txt) = NULL
+#           return(some_txt)
+#         }
+# 
+#         db_key <- "da81488559b8434a537834dd9bc09e8e"
+# 
+# 
+# 
+#         ##########################################################
+# 
+# 
+#         #GEO_senti = data.frame(State = NULL, negative = NA, neutral = NA, positive = NA)
+#         GEO_senti = matrix(NA, 50, 4)
+# 
+#         for (i in 1:length(geoinfo_state)){
+# 
+#         geocode_state = geoinfo_state[i,2]
+#         ###########################################################
+# 
+# 
+# 
+#         print("Getting tweets...")
+#         keyword = input$Keywd
+#         # get some tweets
+#         tweets = searchTwitter(keyword, 10, lang="en",geocode = paste(geocode_state) )
+#         # get text
+#         tweet_txt = sapply(tweets, function(x) x$getText())
+# 
+#         # clean text
+#         tweet_clean = clean.text(tweet_txt)
+#         tweet_num = length(tweet_clean)
+#         # data frame (text, sentiment)
+#         tweet_df = data.frame(text=tweet_clean, sentiment=rep("", tweet_num),stringsAsFactors=FALSE)
+# 
+#         print("Getting sentiments...")
+#         # apply function getSentiment
+#         sentiment = rep(0, tweet_num)
+#         for (j in 1:tweet_num)
+#         {
+#           tmp = getSentiment(tweet_clean[j], db_key)
+# 
+#           tweet_df$sentiment[j] = tmp$sentiment
+# 
+#           print(paste(j," of ", tweet_num))
+# 
+# 
+#         }
+# 
+#         # delete rows with no sentiment
+#         tweet_df <- tweet_df[tweet_df$sentiment!="",]
+# 
+# 
+#         #separate text by sentiment
+#         sents = levels(factor(tweet_df$sentiment))
+#         #emos_label <- emos
+# 
+# 
+#         # get the labels and percents
+# 
+#         labels <-  lapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"))
+# 
+#         #Extract the sentiments percentages
+#         labels_extract = as.numeric(gsub("\\D", "", labels))/10000
+#         GEO_senti[i,] = c(geoinfo_state[i,3],labels_extract[1],labels_extract[2],labels_extract[3])
+#         }
+# 
+#         GEO_senti = as.data.frame(GEO_senti)
+#         colnames(GEO_senti) = c("State", "Negative", "Neutral", "Positive")
+# 
+# 
+# #Draw the map
+# 
+# 
+#         suppressPackageStartupMessages(library(googleVis))
+#         op=options(gvis.plot.tag='chart')
+#         Senti_heat = gvisGeoChart( GEO_senti, locationvar='State', colorvar = 'Positive',
+#                                 options=list(title="Heated map of State Sentiments",
+#                                              titlevar="Title",region='US',projection="kavrayskiy-vii",numvar="Positive",
+#                                              displayMode="regions", resolution="provinces",
+#                                              colorAxis="{colors:['yellow','red']}",width=650, height=400))
+# 
+#         T <- gvisTable(GEO_senti,
+#                        options=list(width=270, height=400))
+# 
+#         GT <- gvisMerge(Senti_heat,T, horizontal=TRUE)
+#         plot(GT)
+#       }
+#     )
 
     # Simulate the sock-picking process under user-specified priors for later comparison.
 #     sims = reactive (
@@ -559,12 +563,7 @@ shinyServer(
       }
     )
 
-    output$state_Sent  = renderPlot(
-      {
-        if (input$go){
-        statewiseSent()}
-      }
-    )
+    
 
     # Create a data frame containing the 95% CI and median for all posteriors.
 #     qq = reactive(
