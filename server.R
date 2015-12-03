@@ -67,7 +67,10 @@ geoinfo_state = data.frame("State" = c("Alabama", "Alaska", "Arizona", "Arkansas
                                        "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK",
                                        "OG","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
                                        "WI","WY"))
-
+locs <- availableTrendLocations()
+usid <- locs[which(locs$country == "United States"), c(1,3)]
+rownames(usid) = NULL
+colnames(usid) = c("City", "woeid")
 
 shinyServer(
   function(input, output, session) {
@@ -562,7 +565,16 @@ shinyServer(
         print(statewise())}
       }
     )
-
+    
+    output$trendtable = renderTable(
+      {
+        trends <- getTrends(usid$woeid[which(usid$City == input$City)])
+        Trend <- matrix(head(trends$name, 5))
+        colnames(Trend) <- input$City
+        Trend
+        
+      }
+    )
     
 
     # Create a data frame containing the 95% CI and median for all posteriors.

@@ -1,7 +1,10 @@
 library(shiny)
 
-total_priors = c('Negative Binomial'='nbinom', 'Poisson'='pois')
-prop_priors = c('Beta'='beta', 'Truncated Normal'='tnorm')
+locs <- availableTrendLocations()
+usid <- locs[which(locs$country == "United States"), c(1,3)]
+rownames(usid) = NULL
+colnames(usid) = c("City", "woeid")
+city <- usid$City
 
 shinyUI(
   fluidPage(
@@ -31,6 +34,8 @@ shinyUI(
                                        "Wisconsin", "Wyoming")),
       hr(),
       actionButton("go", "Let's Search"),
+      hr(),
+      selectInput('City', 'City:', city),
       hr()
     ),
     mainPanel(
@@ -42,7 +47,11 @@ shinyUI(
       br(),
       h4('State Sentiments:'),
       plotOutput('state_Sent'),
-      br()
+      br(),
+      h4('Trends:'),
+      tags$head(tags$style( HTML('#mytable table {border-collapse:collapse; } 
+                             #mytable table th { transform: rotate(-0deg)}'))),
+      column(12,tableOutput("trendtable"))
 
 #       h4('Posteriors:'),
 #       plotOutput('all_posterior'),
