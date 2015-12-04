@@ -17,10 +17,10 @@ shinyUI(
       "Twitter API: Sentimental analysis and geographial statistics"
     ),
     sidebarPanel(
-      numericInput('n_tweets', h4('Number of Tweets:'), value=10, min=100, step=1),
+      numericInput('n_tweets', h4('Number of Tweets:'), value=10, min=1, step=1),
       hr(),
       h4('Keyword:'),
-      textInput('Keywd', "Search keyword", value = "Paris"),
+      textInput('Keywd', "Search Keyword", value = "Paris"),
       hr(),
 
       selectInput('State', 'State:', c("Alabama", "Alaska", "Arizona", "Arkansas",
@@ -37,12 +37,15 @@ shinyUI(
                                        "South Dakota", "Tennessee", "Texas", "Utah",
                                        "Vermont", "Virginia", "Washington", "West Virginia",
                                        "Wisconsin", "Wyoming")),
+      sliderInput('n_topKey_State', h4('Number of State Top Words:'),
+                  value=20, min=1,max=50,step=1),
       hr(),
       checkboxInput('showcitytrend', "Show me City Tweet Trend !"),
       hr(),
       conditionalPanel(
         condition="input.showcitytrend == true",
-        selectInput('City', 'City:', city)
+        selectInput('City', 'City:', city),
+        sliderInput('n_topKey', h4('Number of Top Tweets:'), value=20, min=1,max=50,step=1)
       ),
       hr(),
       actionButton("go", "Let's Search!"),
@@ -55,19 +58,18 @@ shinyUI(
         tabPanel("Keyword percentage",h4("Keyword percentage:"),htmlOutput('state_map'),
                  h4("Keyword Bubbleplot:"),htmlOutput('keywd_bubble')),
         tabPanel("Overall word cloud with Sentiments",h4("Overall word cloud:"),plotOutput('overall_cloud'),
-                 h4('State word cloud:'), br(), plotOutput('state_cloud'))
-      ),
+                 h4('State word cloud:'), br(), plotOutput('state_cloud')),
+        tabPanel("Hot Keywords",h4("State Keyword related Hot Words:"),htmlOutput("Statetable"),
+                 textOutput('text1'),
+                 tags$head(tags$style("#text1{color: black;
+                                      font-size: 20px;
+                                      font-weight: bold;
+                                      }")),
       br(),
-      textOutput('text1'),
-      tags$head(tags$style("#text1{color: black;
-                                 font-size: 20px;
-                           font-weight: bold;
-                           }")),
-
       tags$head(tags$style( HTML('#mytable table {border-collapse:collapse; }
-                             #mytable table th { transform: rotate(-0deg)}'))),
-      column(12,tableOutput("trendtable"))
-
+                                 #mytable table th { transform: rotate(-0deg)}'))),
+      column(12,htmlOutput("trendtable")))
+      )
     )
   )
 )
