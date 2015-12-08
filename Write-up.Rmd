@@ -1,0 +1,22 @@
+---
+title: "Final Project"
+author: "Qi Wang"
+date: "December 7, 2015"
+output: html_document
+---
+Our project aims to create a shiny application to analyze twitter data pulled from an api from several perspectives. First, we analyze the sentiments of states on a specific keyword all chosen by user through a heatmap characterizing the 50 states' sentiments and ___________. The next function generates word clouds of this keyword both in the United States and in this specific state with sentiment classification based on color. The last function lists the keywords of this state surrounding the chosen keyword along with a choice for user to look at a specific city's current trending words.
+
+
+##Application 1##
+We need to first authenticate shiny with twitter api. Then we set up a data frame with state names, their corresponding randomly picked coordinates, their abbreviations, their population, and their party affliations.
+
+##Application 2##
+We first set up a function `getSentiment` to get mood probability from Datum Box for the words we input. We also set up a function `clean.text` to clean up and parse the text we pull from Twitter. Then we pull the tweets on the keyword set by the user, and clean up the tweets and find sentiment for each word. We can then get percentages of the sentiments. Then we perform dtm to find the most frequent words appearing in the tweets with our keyword and create a word cloud that includes sentiment information.
+
+Next we do the same thing for the specific state chosen by user. This would allow us to compare the statewise sentiment with the entire nation.
+
+
+##Application 3##
+We pull the list of cities with available trending keywords first with `availableTrendLocations()`. 
+
+We can display the trending keywords for the user selected state and the selected city in two table through `getTrends`.
