@@ -238,7 +238,7 @@ shinyServer(
 
         ###############
 
-        db_key <- "804ab73cf3d214af5dc587c8198daa33"
+        db_key <- "e86d3246ade555b409caeb6d3c8b77fd"
 
         print("Getting tweets...")
         keyword = input$Keywd
@@ -359,7 +359,7 @@ shinyServer(
 
         geocode_state = geoinfo_state[which(geoinfo_state$State==input$State),2]
 
-        db_key <- "804ab73cf3d214af5dc587c8198daa33"
+        db_key <- "e86d3246ade555b409caeb6d3c8b77fd"
 
         print("Getting tweets...")
         keyword = input$Keywd
