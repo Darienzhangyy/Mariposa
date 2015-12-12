@@ -46,15 +46,12 @@ In the third plot, two data visualization techniques are used for the display of
 
 Honestly speaking, this third tab is the most likely place an error will occur. You may seen error message like "Error in Topnum[i] = round(Top$freq[which(Top$word == tolower(input$Keywd))]/SUMf: replacement has length zero" in the console. After hundreds of times of debugging, we find that the problem is not because of the code. This is due to another warning beforehead: "10 tweets were requested but the API can only return 0". That is to say, if there is no tweets grabbed from API, it is not hard to understand why replacement has length of zero. 
 
-This is truly due to the API control in twitter. Such weird thing may happen when we get the output perfectly today but error message the next day with code unchanged. Since we use a for-loop to grab certain amounts of tweets from all 50 states, the possible reasons might be: 1. too much traffic in a short period of time; 2. The keyword can not be sampled in some states.(notice that Twitter API only allows us to search for a very small portion of the whole database); 3. The search number is too small. \newline
+This is truly due to the API control in twitter. Such weird thing may happen when we get the output perfectly today but error message the next day with code unchanged. Since we use a for-loop to grab certain amounts of tweets from all 50 states, the possible reasons might be: 1. too much traffic in a short period of time; 2. The keyword can not be sampled in some states.(notice that Twitter API only allows us to search for a very small portion of the whole database); 3. The search number is too small. 
 
-Right now we can test this part. We type in "apple" in the keyword input. Minutes ago there is a error message as we have shown you. Now we reload the second time with same code, same input "apple", and everything is perfect now. So if you cannot get the ideal output after several trials, please look at this screenshot for reference.\newline
+Right now we can test this part. We type in "apple" in the keyword input. Minutes ago there is a error message as we have shown you. Now we reload the second time with same code, same input "apple", and everything is perfect now. So if you cannot get the ideal output after several trials, please look at this screenshot for reference.
 
-```{r}
-source("~/ss1.png")
-source("~/ss2.png")
-```
-
+![](~/ss1.png)
+![](~/ss2.png)
 
 So let's move on to describe another feature of this application. In this part, we hope to compare difference of the same topic across difference states. In the interactive map graph at the top, the color represents percentage of number of keywords mentioned from the sample. This shows which state has the most discussion about the topic based on the tweets we iteratively grab. This map graph serves as a heated map that shows the extent of interest of the topic(keyword) in different states. You can check percentage of every state by moving mouse to the state on the map.
 
