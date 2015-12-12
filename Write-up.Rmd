@@ -5,13 +5,13 @@ output: html_document
 
 ---
 
-Darien Youyuan Zhang\newline
+Darien Youyuan Zhang
 
-Wei (Emily) Shao\newline
+Wei (Emily) Shao
 
-Yulin Lei\newline
+Yulin Lei
 
-Qi Wang\newline
+Qi Wang
 
 ---
 Our project aims to create a shiny application to analyze twitter data pulled from an api from several perspectives. First, we analyze the sentiments of states on a specific keyword all chosen by user through a heatmap characterizing the 50 states' sentiments and ___________. The next function generates word clouds of this keyword both in the United States and in this specific state with sentiment classification based on color. The last function lists the keywords of this state surrounding the chosen keyword along with a choice for user to look at a specific city's current trending words.
