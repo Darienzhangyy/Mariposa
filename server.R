@@ -93,8 +93,6 @@ colnames(usid) = c("City", "woeid")
 
 shinyServer(
   function(input, output, session) {
-
-
     observe(
       {
     x <- input$Keywd
@@ -104,7 +102,83 @@ shinyServer(
 
       }
      )
+###########################################################################################
+##########################For the first Tab in the main panel##############################
+###########################################################################################
 
+     #State Top keywords
+    state_topKey = reactive(
+      {
+
+        clean.text <- function(some_txt)
+        {
+          some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
+          some_txt = gsub("@\\w+", "", some_txt)
+          some_txt = gsub("[[:punct:]]", "", some_txt)
+          some_txt = gsub("[[:digit:]]", "", some_txt)
+          some_txt = gsub("http\\w+", "", some_txt)
+          some_txt = gsub("[ \t]{2,}", "", some_txt)
+          some_txt = gsub("^\\s+|\\s+$", "", some_txt)
+          some_txt = gsub("amp", "", some_txt)
+          # define "tolower error handling" function
+          try.tolower = function(x)
+          {
+            y = NA
+            try_error = tryCatch(tolower(x), error=function(e) e)
+            if (!inherits(try_error, "error"))
+              y = tolower(x)
+            return(y)
+          }
+
+          some_txt = sapply(some_txt, try.tolower)
+          some_txt = some_txt[some_txt != ""]
+          names(some_txt) = NULL
+          return(some_txt)
+        }
+
+
+        statePick_Geo = geoinfo_state[which(geoinfo_state$State==input$State),2]
+        print("Getting tweets...")
+        keyword = input$Keywd
+        # get some tweets
+        tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(statePick_Geo) )
+        # get text
+        tweet_txt = sapply(tweets, function(x) x$getText())
+
+        # clean text
+        tweet_clean = clean.text(tweet_txt)
+        tweet_num = length(tweet_clean)
+        # data frame (text, sentiment)
+        tweet_df = data.frame(text=tweet_clean, sentiment=rep("", tweet_num),stringsAsFactors=FALSE)
+
+#   count.docs = removeWords(tweet_df$text, stopwords("german"))
+#   count.docs = removeWords(tweet_df$text, stopwords("english"))
+
+        all_text <- paste(tweet_df$text, collapse = " ")
+        corpus <- Corpus(VectorSource(all_text))
+        #remove punctuation
+        corpus <- tm_map(corpus, removePunctuation)
+        #remove numbers
+        corpus <- tm_map(corpus, removeNumbers)
+        #remove redundant white space
+        corpus <- tm_map(corpus, stripWhitespace)
+        #remove stopwords in English
+        corpus <- tm_map(corpus, removeWords,stopwords("en"))
+        dtm <- as.matrix(DocumentTermMatrix(corpus))
+        freq <- sort(colSums(dtm),decreasing = TRUE)
+        freq <- as.data.frame(freq)
+        TopN = head(freq,input$n_topKey_State)
+        TopN$word = row.names(TopN)
+        colnames(TopN)[2] = input$State
+        colnames(TopN)[1] = "Rank"
+        TopN[1] = seq.int(nrow(TopN))
+        TopN
+      })
+
+
+########################################################################################
+#######################For the second Tab in the main panel#############################
+########################################################################################
     overall = reactive(
       {
 
@@ -121,7 +195,7 @@ shinyServer(
           if (str_length(text) > 360){
             text <- substr(text, 0, 359);
           }
-          ##########################################
+          ###############
 
           data <- getURL(paste("http://api.datumbox.com/1.0/TwitterSentimentAnalysis.json?api_key=", key, "&text=",text, sep=""))
 
@@ -130,7 +204,7 @@ shinyServer(
           # get mood probability
           sentiment = js$output$result
 
-          ###################################
+          ################
 
 
           return(list(sentiment=sentiment))
@@ -162,9 +236,7 @@ shinyServer(
           return(some_txt)
         }
 
-
-
-        ###########################################################
+        ###############
 
         db_key <- "804ab73cf3d214af5dc587c8198daa33"
 
@@ -193,23 +265,17 @@ shinyServer(
 
           print(paste(i," of ", tweet_num))
 
-
         }
 
         # delete rows with no sentiment
         tweet_df <- tweet_df[tweet_df$sentiment!="",]
 
-
         #separate text by sentiment
         sents = levels(factor(tweet_df$sentiment))
         #emos_label <- emos
 
-
         # get the labels and percents
-
         labels <-  mclapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"), mc.cores=8)
-
-
 
         nemo = length(sents)
         emo.docs = rep("", nemo)
@@ -222,7 +288,6 @@ shinyServer(
         }
 
 
-
         # remove stopwords
         emo.docs = removeWords(emo.docs, stopwords("german"))
         emo.docs = removeWords(emo.docs, stopwords("english"))
@@ -231,9 +296,6 @@ shinyServer(
         tdm = as.matrix(tdm)
         colnames(tdm) = labels
 
-
-
-
         # comparison word cloud
         cpCloud = comparison.cloud(tdm, colors = brewer.pal(nemo, "Dark2"),
                          scale = c(3,.5), random.order = FALSE, title.size = 1.5)
@@ -241,13 +303,9 @@ shinyServer(
       }
     )
 
-
-
-####################################################################################
-
+####################State word clouds#######################
 
 #Based on different states
-
     statewise = reactive(
       {
         getSentiment <- function (text, key){
@@ -259,11 +317,9 @@ shinyServer(
           text <- str_replace_all(text, "%\\d\\d", "");
           text <- str_replace_all(text, " ", "%20");
 
-
           if (str_length(text) > 360){
             text <- substr(text, 0, 359);
           }
-
 
           data <- getURL(paste("http://api.datumbox.com/1.0/TwitterSentimentAnalysis.json?api_key=", key, "&text=",text, sep=""))
 
@@ -271,7 +327,6 @@ shinyServer(
 
           # get mood probability
           sentiment = js$output$result
-
 
           return(list(sentiment=sentiment))
         }
@@ -302,11 +357,7 @@ shinyServer(
           return(some_txt)
         }
 
-
-
-
         geocode_state = geoinfo_state[which(geoinfo_state$State==input$State),2]
-
 
         db_key <- "804ab73cf3d214af5dc587c8198daa33"
 
@@ -330,12 +381,8 @@ shinyServer(
         foreach(i=1:tweet_num) %dopar%
         {
           tmp = getSentiment(tweet_clean[i], db_key)
-
           tweet_df$sentiment[i] = tmp$sentiment
-
           print(paste(i," of ", tweet_num))
-
-
         }
 
         # delete rows with no sentiment
@@ -346,11 +393,9 @@ shinyServer(
         sents = levels(factor(tweet_df$sentiment))
         #emos_label <- emos
 
-
         # get the labels and percents
 
         labels <-  mclapply(sents, function(x) paste(x,format(round((length((tweet_df[tweet_df$sentiment ==x,])$text)/length(tweet_df$sentiment)*100),2),nsmall=2),"%"), mc.cores = 8)
-
 
 
         nemo = length(sents)
@@ -363,7 +408,6 @@ shinyServer(
         }
 
 
-
         # remove stopwords
         emo.docs = removeWords(emo.docs, stopwords("german"))
         emo.docs = removeWords(emo.docs, stopwords("english"))
@@ -372,19 +416,15 @@ shinyServer(
         tdm = as.matrix(tdm)
         colnames(tdm) = labels
 
-
-
-
         # comparison word cloud
         cpCloud = comparison.cloud(tdm, colors = brewer.pal(nemo, "Dark2"),
                                    scale = c(3,.5), random.order = FALSE, title.size = 1.5)
         cpCloud
       })
 
-
-
-
-####################################################################################
+############################################################################################
+#################################For the third tab in the main panel########################
+############################################################################################
  #all state map
 
     state_all_map = reactive(
@@ -415,9 +455,6 @@ shinyServer(
           return(some_txt)
         }
 
-
-
-        #GEO_senti = data.frame(State = NULL, negative = NA, neutral = NA, positive = NA)
         GEO_map = matrix(NA, 50, 5)
         Topnum = vector(mode = "numeric", length = 50)
         Topfreq = vector(mode = "numeric", length = 50)
@@ -474,80 +511,9 @@ shinyServer(
 
         return(GEO_map)
 
-
-
       }
     )
 
-
-#State Top keywords
-    state_topKey = reactive(
-      {
-################################################################################
-        clean.text <- function(some_txt)
-        {
-          some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
-          some_txt = gsub("@\\w+", "", some_txt)
-          some_txt = gsub("[[:punct:]]", "", some_txt)
-          some_txt = gsub("[[:digit:]]", "", some_txt)
-          some_txt = gsub("http\\w+", "", some_txt)
-          some_txt = gsub("[ \t]{2,}", "", some_txt)
-          some_txt = gsub("^\\s+|\\s+$", "", some_txt)
-          some_txt = gsub("amp", "", some_txt)
-          # define "tolower error handling" function
-          try.tolower = function(x)
-          {
-            y = NA
-            try_error = tryCatch(tolower(x), error=function(e) e)
-            if (!inherits(try_error, "error"))
-              y = tolower(x)
-            return(y)
-          }
-
-          some_txt = sapply(some_txt, try.tolower)
-          some_txt = some_txt[some_txt != ""]
-          names(some_txt) = NULL
-          return(some_txt)
-        }
-
-################################################################################
-    statePick_Geo = geoinfo_state[which(geoinfo_state$State==input$State),2]
-    print("Getting tweets...")
-    keyword = input$Keywd
-    # get some tweets
-    tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(statePick_Geo) )
-    # get text
-    tweet_txt = sapply(tweets, function(x) x$getText())
-
-    # clean text
-    tweet_clean = clean.text(tweet_txt)
-    tweet_num = length(tweet_clean)
-    # data frame (text, sentiment)
-    tweet_df = data.frame(text=tweet_clean, sentiment=rep("", tweet_num),stringsAsFactors=FALSE)
-
-    #         count.docs = removeWords(tweet_df$text, stopwords("german"))
-    #         count.docs = removeWords(tweet_df$text, stopwords("english"))
-
-    all_text <- paste(tweet_df$text, collapse = " ")
-    corpus <- Corpus(VectorSource(all_text))
-    #remove punctuation
-    corpus <- tm_map(corpus, removePunctuation)
-    #remove numbers
-    corpus <- tm_map(corpus, removeNumbers)
-    #remove redundant white space
-    corpus <- tm_map(corpus, stripWhitespace)
-    #remove stopwords in English
-    corpus <- tm_map(corpus, removeWords,stopwords("en"))
-    dtm <- as.matrix(DocumentTermMatrix(corpus))
-    freq <- sort(colSums(dtm),decreasing = TRUE)
-    freq <- as.data.frame(freq)
-    TopN = head(freq,input$n_topKey_State)
-    TopN$word = row.names(TopN)
-    colnames(TopN)[2] = input$State
-    colnames(TopN)[1] = "Rank"
-    TopN[1] = seq.int(nrow(TopN))
-    TopN
-      })
 
 
 
@@ -555,16 +521,63 @@ shinyServer(
 ##################################OUTPUT####################################
 ############################################################################
 
-    allCloudTemp = eventReactive(input$go, {
-      print(overall())
+##########################################################################################
+###############Output for the word clouds ---- first tab in the main panel################
+##########################################################################################
+
+TableTemp = eventReactive(input$go, {
+      if (input$showcitytrend==TRUE){
+
+        trends = getTrends(usid$woeid[which(usid$City == input$City)])
+        Trend = matrix(head(trends$name, input$n_topKey))
+        colnames(Trend) = input$City
+        TrendDF = as.data.frame(Trend,stringsAsFactors = F)
+        TrendDF$Rank = seq.int(nrow(TrendDF))
+        TrendDF = TrendDF[c(2,1)]
+        TrendTable = gvisTable(TrendDF,
+                               options=list(width=255, height=650))
+        return(TrendTable)
+      }
     })
 
-    output$overall_cloud = renderPlot(
+    output$trendtable = renderGvis(
       {
-        allCloudTemp()
+        if(input$showcitytrend==TRUE) {
+          TableTemp()
+        }
       }
     )
 
+    output$text1 = renderText(
+      {
+        if(input$showcitytrend==TRUE) {
+          "City Hot Tweets Trend"
+        } else {
+          " "
+        }
+      }
+    )
+
+    StateTableTemp = eventReactive(input$go, {
+      StateKWTable = gvisTable(state_topKey(),options=list(width=255, height=650))
+      return(StateKWTable)
+    })
+
+    output$Statetable = renderGvis({
+      StateTableTemp()
+      })
+
+##########################################################################################
+##############Output for the word clouds ---- second tab in the main panel################
+##########################################################################################
+
+allCloudTemp = eventReactive(input$go, {
+      print(overall())
+    })
+
+    output$overall_cloud = renderPlot({
+        allCloudTemp()
+      })
 
     stateCloudTemp = eventReactive(input$go, {
       print(statewise())
@@ -576,14 +589,15 @@ shinyServer(
       }
     )
 
+##########################################################################################
+##########Output for the map and bubble graph ---- third tab in the main panel############
+##########################################################################################
 
-
-    mapTemp = eventReactive(input$go, {
-      map_heat = gvisGeoChart(state_all_map(), locationvar='State', colorvar = 'Percentage',
-                              options=list(region='US',projection="kavrayskiy-vii",
-                                           displayMode="regions", resolution="provinces",
-                                           colorAxis="{colors:['yellow','red']}",width=650, height=400))
-
+mapTemp = eventReactive(input$go, {
+  map_heat = gvisGeoChart(state_all_map(), locationvar='State', colorvar = 'Percentage',
+                  options=list(region='US',projection="kavrayskiy-vii",
+                      displayMode="regions", resolution="provinces",
+                      colorAxis="{colors:['yellow','red']}",width=650, height=400))
       T <- gvisTable(state_all_map(),
                      options=list(width=390, height=450))
 
@@ -591,16 +605,11 @@ shinyServer(
       return(GT)
     })
 
-
-
-    output$state_map=renderGvis(
-      {
+output$state_map=renderGvis({
         mapTemp()
-      }
-    )
+      })
 
-
-    bubbleTemp = eventReactive(input$go, {
+bubbleTemp = eventReactive(input$go, {
       bubble = gvisBubbleChart(state_all_map(), idvar="State",
                                sizevar="Percentage",xvar="Population",yvar="TotalTweet",
                                colorvar="Party",
@@ -609,11 +618,9 @@ shinyServer(
       return(bubble)
       })
 
-    output$keywd_bubble = renderGvis(
-      {
+output$keywd_bubble = renderGvis({
         bubbleTemp()
-      }
-    )
+      })
 #
 #     output$keywd_bubble=renderGvis(
 #       {
@@ -629,57 +636,5 @@ shinyServer(
 #       }
 #     )
 
-
-    TableTemp = eventReactive(input$go, {
-      if (input$showcitytrend==TRUE){
-
-        trends = getTrends(usid$woeid[which(usid$City == input$City)])
-        Trend = matrix(head(trends$name, input$n_topKey))
-        colnames(Trend) = input$City
-        TrendDF = as.data.frame(Trend,stringsAsFactors = F)
-        TrendDF$Rank = seq.int(nrow(TrendDF))
-        TrendDF = TrendDF[c(2,1)]
-        TrendTable = gvisTable(TrendDF,
-                       options=list(width=255, height=650))
-        return(TrendTable)
-      }
-    })
-
-    output$trendtable = renderGvis(
-      {
-        if(input$showcitytrend==TRUE) {
-        TableTemp()
-        }
-      }
-    )
-
-    output$text1 = renderText(
-      {
-        if(input$showcitytrend==TRUE) {
-          "City Hot Tweets Trend"
-        } else {
-          " "
-        }
-      }
-    )
-
-
-    StateTableTemp = eventReactive(input$go, {
-
-        StateKWTable = gvisTable(state_topKey(),
-                               options=list(width=255, height=650))
-        return(StateKWTable)
-
-    })
-
-    output$Statetable = renderGvis(
-      {
-          StateTableTemp()
-      }
-    )
-
-
-
-  }
-
+     }
 )

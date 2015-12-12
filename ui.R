@@ -94,7 +94,6 @@ shinyUI(
                             content: '(The word you choose is a restricted word to search freely using Twitter API or you have searched too frequently Try reloading the app)';
                             color: black }"))
 
-
       )
     )
   )
