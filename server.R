@@ -1,18 +1,27 @@
 list.of.packages <- c("parallel","truncnorm","ggplot2","gridExtra","twitteR","stringr","httr","RCurl",
-                      "rjson","tm","wordcloud","foreach","googleVis","shiny")
+                      "rjson","tm","wordcloud","foreach","googleVis","shiny","base64enc")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
 lapply(list.of.packages, suppressPackageStartupMessages(library),character.only = TRUE)
 
+# options(httr_oauth_cache=T)
+# api_key <- "hftNGPFqzf9GMnHLMQVnNV7Vz"
+#
+# api_secret <- "HjTPQByqFDdriKKEixRbm4UNn2golHR5qGPbrPogRDm0tQkFua"
+#
+# access_token <- "296897722-PllUrWEvYediPUkYtJf8dwr2vmZe0p5O0mWP46Cc"
+#
+# access_token_secret <- "1NySI44qSZW0Ie6SEesd1T28NOun3NiOPyhe3QxLaNvuY"
+#
+# setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+api_key <- "a1CN89yFTk4fSaIanFpMQnfK8"
 
-api_key <- "hftNGPFqzf9GMnHLMQVnNV7Vz"
+api_secret <- "HxVBDJNdIW1KkZnPiqj9qw7Vn25ILlYqywcHCgHJt1JLvRhaWW"
 
-api_secret <- "HjTPQByqFDdriKKEixRbm4UNn2golHR5qGPbrPogRDm0tQkFua"
+access_token <- "296897722-b3mIQzlLEHTiaO5zgxr521DPWhZXLvQ5JlKUaMWh"
 
-access_token <- "296897722-PllUrWEvYediPUkYtJf8dwr2vmZe0p5O0mWP46Cc"
-
-access_token_secret <- "1NySI44qSZW0Ie6SEesd1T28NOun3NiOPyhe3QxLaNvuY"
+access_token_secret <- "8Ldb6k3uF9b7UkmuzT7TrCvmN6HW1L8bHJknkHzIrvv8u"
 
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
@@ -31,31 +40,31 @@ geoinfo_state = data.frame("State" = c("Alabama", "Alaska", "Arizona", "Arkansas
                                        "South Dakota", "Tennessee", "Texas", "Utah",
                                        "Vermont", "Virginia", "Washington", "West Virginia",
                                        "Wisconsin", "Wyoming"),
-                           "Geo" = c("32.31823,-86.9023,350mi","64.20084,-149.4937,350mi",
-                                     "34.04893,-111.0937,350mi","35.20105,-91.83183,350mi",
-                                     "36.77826,-119.4179,350mi","39.55005,-105.7821,350mi",
-                                     "41.60322,-73.08775,350mi","38.91083,-75.52767,350mi",
-                                     "27.66483,-81.51575,350mi","32.16562,-82.90008,350mi",
-                                     "19.89677,-155.5828,350mi","44.0682,-114.742,350mi",
-                                     "40.63312,-89.39853,350mi","40.26719,-86.1349,350mi",
-                                     "41.878,-93.0977,350mi","39.0119,-98.48425,350mi",
-                                     "37.83933,-84.27002,350mi","30.9843,-91.96233,350mi",
-                                     "45.25378,-69.44547,350mi","39.04575,-76.64127,350mi",
-                                     "42.40721,-71.38244,350mi","44.31484,-85.60236,350mi",
-                                     "46.72955,-94.6859,350mi","32.35467,-89.39853,350mi",
-                                     "37.96425,-91.83183,350mi","46.87968,-110.3626,350mi",
-                                     "41.49254,-99.90181,350mi","38.80261,-116.4194,350mi",
-                                     "43.19385,-71.5724,350mi","40.05832,-74.40566,350mi",
-                                     "34.51994,-105.8701,350mi","40.71278,-74.00594,350mi",
-                                     "35.75957,-79.0193,350mi","47.55149,-101.002,350mi",
-                                     "40.41729,-82.90712,350mi","35.46756,-97.51643,350mi",
-                                     "43.80413,-120.5542,350mi","41.20332,-77.19452,350mi",
-                                     "41.58009,-71.47743,350mi","33.83608,-81.16372,350mi",
-                                     "43.96951,-99.90181,350mi","35.51749,-86.58045,350mi",
-                                     "31.9686,-99.90181,350mi","39.32098,-111.0937,350mi",
-                                     "44.5588,-72.57784,350mi","37.43157,-78.65689,350mi",
-                                     "38.90719,-77.03687,350mi","38.59763,-80.4549,350mi",
-                                     "43.78444,-88.78787,350mi","43.07597,-107.2903,350mi"),
+                           "Geo" = c("32.31823,-86.9023,550mi","64.20084,-149.4937,550mi",
+                                     "34.04893,-111.0937,550mi","35.20105,-91.83183,550mi",
+                                     "36.77826,-119.4179,550mi","39.55005,-105.7821,550mi",
+                                     "41.60322,-73.08775,550mi","38.91083,-75.52767,550mi",
+                                     "27.66483,-81.51575,550mi","32.16562,-82.90008,550mi",
+                                     "19.89677,-155.5828,550mi","44.0682,-114.742,550mi",
+                                     "40.63312,-89.39853,550mi","40.26719,-86.1349,550mi",
+                                     "41.878,-93.0977,550mi","39.0119,-98.48425,550mi",
+                                     "37.83933,-84.27002,550mi","30.9843,-91.96233,550mi",
+                                     "45.25378,-69.44547,550mi","39.04575,-76.64127,550mi",
+                                     "42.40721,-71.38244,550mi","44.31484,-85.60236,550mi",
+                                     "46.72955,-94.6859,550mi","32.35467,-89.39853,550mi",
+                                     "37.96425,-91.83183,550mi","46.87968,-110.3626,550mi",
+                                     "41.49254,-99.90181,550mi","38.80261,-116.4194,550mi",
+                                     "43.19385,-71.5724,550mi","40.05832,-74.40566,550mi",
+                                     "34.51994,-105.8701,550mi","40.71278,-74.00594,550mi",
+                                     "35.75957,-79.0193,550mi","47.55149,-101.002,550mi",
+                                     "40.41729,-82.90712,550mi","35.46756,-97.51643,550mi",
+                                     "43.80413,-120.5542,550mi","41.20332,-77.19452,550mi",
+                                     "41.58009,-71.47743,550mi","33.83608,-81.16372,550mi",
+                                     "43.96951,-99.90181,550mi","35.51749,-86.58045,550mi",
+                                     "31.9686,-99.90181,550mi","39.32098,-111.0937,550mi",
+                                     "44.5588,-72.57784,550mi","37.43157,-78.65689,550mi",
+                                     "38.90719,-77.03687,550mi","38.59763,-80.4549,550mi",
+                                     "43.78444,-88.78787,550mi","43.07597,-107.2903,550mi"),
                            "StateAbb" = c("AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID",
                                        "IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS",
                                        "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK",
@@ -84,11 +93,17 @@ colnames(usid) = c("City", "woeid")
 
 shinyServer(
   function(input, output, session) {
+
+
     observe(
       {
-        updateSliderInput(session, 'n_paired', max=round(floor(input$n_total/2)))
+    x <- input$Keywd
+
+        # This will change the value of input$Keywd, based on x
+        updateTextInput(session, "Keywd", value =  x)
+
       }
-    )
+     )
 
     overall = reactive(
       {
@@ -258,8 +273,6 @@ shinyServer(
           sentiment = js$output$result
 
 
-
-
           return(list(sentiment=sentiment))
         }
 
@@ -300,7 +313,8 @@ shinyServer(
         print("Getting tweets...")
         keyword = input$Keywd
         # get some tweets
-        tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(geocode_state))
+        tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(geocode_state),
+                               retryOnRateLimit=200)
         # get text
         tweet_txt = sapply(tweets, function(x) x$getText())
 
@@ -405,17 +419,19 @@ shinyServer(
 
         #GEO_senti = data.frame(State = NULL, negative = NA, neutral = NA, positive = NA)
         GEO_map = matrix(NA, 50, 5)
-        Top30num = rep(0,50)
-        Top30freq = rep(0,50)
+        Topnum = vector(mode = "numeric", length = 50)
+        Topfreq = vector(mode = "numeric", length = 50)
+        #keyword = input$Keywd
 
-        for (i in 1:nrow(geoinfo_state)){
+  for (i in 1:nrow(geoinfo_state)){
 
         geocode_state = geoinfo_state[i,2]
-
+#stopifnot(nchar(geocode_state)==2)
         print("Getting tweets...")
-        keyword = input$Keywd
+
         # get some tweets
-        tweets = searchTwitter(keyword, input$n_tweets, lang="en",geocode = paste(geocode_state) )
+        tweets = searchTwitter(input$Keywd, input$n_tweets, lang="en",geocode = paste(geocode_state),
+                               since='2010-01-01')
         # get text
         tweet_txt = sapply(tweets, function(x) x$getText())
 
@@ -441,20 +457,22 @@ shinyServer(
         corpus <- tm_map(corpus, removeWords,stopwords("en"))
         dtm <- as.matrix(DocumentTermMatrix(corpus))
         freq <- sort(colSums(dtm),decreasing = TRUE)
+        SUMf = sum(freq)
         freq <- as.data.frame(freq)
-        Top30 = head(freq,30)
-        Top30$word = row.names(Top30)
+        Top = freq
+        Top$word = row.names(Top)
+        rownames(Top) <- NULL
         #key word percentage
-        Top30num[i] = round(Top30$freq[which(Top30$word==tolower(keyword))]/sum(freq$freq),4)
-        Top30freq[i] = Top30$freq[which(Top30$word==tolower(keyword))]
-        GEO_map[i,] = c(geoinfo_state[i,3],Top30num[i],Top30freq[i],
+        Topnum[i] = round(Top$freq[which(Top$word==tolower(input$Keywd))]/SUMf,4)
+        Topfreq[i] = Top$freq[which(Top$word==tolower(input$Keywd))]
+        GEO_map[i,] = c(geoinfo_state[i,3],Topnum[i],Topfreq[i],
                         geoinfo_state[i,4],geoinfo_state[i,6])
         }
 
         GEO_map = as.data.frame(GEO_map,stringsAsFactors = FALSE)
         colnames(GEO_map) = c("State", "Percentage","TotalTweet","Population","Party")
 
-        GEO_map
+        return(GEO_map)
 
 
 
