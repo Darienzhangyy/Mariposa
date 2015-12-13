@@ -22,14 +22,12 @@ access_token_secret <- "8Ldb6k3uF9b7UkmuzT7TrCvmN6HW1L8bHJknkHzIrvv8u"
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
 
-
+#word trend
 locs <- availableTrendLocations()
 usid <- locs[which(locs$country == "United States"), c(1,3)]
 rownames(usid) = NULL
 colnames(usid) = c("City", "woeid")
 city <- usid$City
-
-
 
 shinyUI(
   fluidPage(

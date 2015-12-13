@@ -25,7 +25,7 @@ access_token_secret <- "8Ldb6k3uF9b7UkmuzT7TrCvmN6HW1L8bHJknkHzIrvv8u"
 
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
-
+#data frame for drop down menu and data visualization
 geoinfo_state = data.frame("State" = c("Alabama", "Alaska", "Arizona", "Arkansas",
                                        "California", "Colorado", "Connecticut",
                                        "Delaware", "Florida", "Georgia", "Hawaii",
@@ -109,8 +109,8 @@ shinyServer(
      #State Top keywords
     state_topKey = reactive(
       {
-
-        clean.text <- function(some_txt)
+#First write a function for text cleaning
+  clean.text <- function(some_txt)
         {
           some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
           some_txt = gsub("@\\w+", "", some_txt)
@@ -120,7 +120,7 @@ shinyServer(
           some_txt = gsub("[ \t]{2,}", "", some_txt)
           some_txt = gsub("^\\s+|\\s+$", "", some_txt)
           some_txt = gsub("amp", "", some_txt)
-          # define "tolower error handling" function
+    # define "tolower error handling" function
           try.tolower = function(x)
           {
             y = NA
@@ -137,7 +137,7 @@ shinyServer(
         }
 
 
-        statePick_Geo = geoinfo_state[which(geoinfo_state$State==input$State),2]
+statePick_Geo = geoinfo_state[which(geoinfo_state$State==input$State),2]
         print("Getting tweets...")
         keyword = input$Keywd
         # get some tweets
@@ -525,6 +525,11 @@ shinyServer(
 ###############Output for the word clouds ---- first tab in the main panel################
 ##########################################################################################
 
+#In all, the output are all related to "input$go", which is the "Let's search" button.
+#Thus eventReactive is used to prevent the application from running automatically
+#when information is updated.
+
+#City word trend table
 TableTemp = eventReactive(input$go, {
       if (input$showcitytrend==TRUE){
 
@@ -547,7 +552,7 @@ TableTemp = eventReactive(input$go, {
         }
       }
     )
-
+#City word trnd table title
     output$text1 = renderText(
       {
         if(input$showcitytrend==TRUE) {
@@ -557,7 +562,7 @@ TableTemp = eventReactive(input$go, {
         }
       }
     )
-
+#state top keyword related words table
     StateTableTemp = eventReactive(input$go, {
       StateKWTable = gvisTable(state_topKey(),options=list(width=255, height=650))
       return(StateKWTable)
@@ -570,7 +575,7 @@ TableTemp = eventReactive(input$go, {
 ##########################################################################################
 ##############Output for the word clouds ---- second tab in the main panel################
 ##########################################################################################
-
+#Overall word cloud
 allCloudTemp = eventReactive(input$go, {
       print(overall())
     })
@@ -578,7 +583,7 @@ allCloudTemp = eventReactive(input$go, {
     output$overall_cloud = renderPlot({
         allCloudTemp()
       })
-
+#state word cloud
     stateCloudTemp = eventReactive(input$go, {
       print(statewise())
     })
@@ -592,7 +597,7 @@ allCloudTemp = eventReactive(input$go, {
 ##########################################################################################
 ##########Output for the map and bubble graph ---- third tab in the main panel############
 ##########################################################################################
-
+#Keyword percentage heat map
 mapTemp = eventReactive(input$go, {
   map_heat = gvisGeoChart(state_all_map(), locationvar='State', colorvar = 'Percentage',
                   options=list(region='US',projection="kavrayskiy-vii",
@@ -609,6 +614,7 @@ output$state_map=renderGvis({
         mapTemp()
       })
 
+#Bubble plot
 bubbleTemp = eventReactive(input$go, {
       bubble = gvisBubbleChart(state_all_map(), idvar="State",
                                sizevar="Percentage",xvar="Population",yvar="TotalTweet",
