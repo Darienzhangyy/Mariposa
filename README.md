@@ -1,0 +1,56 @@
+Our project aims to create a shiny application to analyze twitter data pulled from Twitter API from several perspectives. First, we analyze the state top words related to the word input by a user. Furthermore, in the first output tab, the user can choose to "show the city tweet trend", which will display a table of the most popular words of the chosen city. The number slide bar enables the user to choose the number of tweets wanted. In all, the first tab enables the user to get a basic idea of what words are mostly related to his/her desired keyword as well as the top keywords of a specific city.
+
+Next in the second tab is where the word clouds and sentimental analysis are shown. The functions generate word clouds of this keyword both throughout the United States and in the specific chosen state with sentiment classification based on color. The sentiments of the words will be analyzed and shown on the graph automatically. The word clouds will also be clustered by area and different colors, with each cluster representing positive, negative or neutral words. The proportion of the sentiments are also shown on the word clouds within each cluster. Thus, the user will be able to compare the attitudes on the topic (keyword) in the US overall and the in the state selected.
+
+Finally in the third tab is the data visualization of the keyword related data. Based on the user's input keyword and number of tweets, there will be a heated map that represent the extent to which the topic is discussed by measuring the percentage of the keyword occurence based text mining. Samples are taken in every state and these twitter related statistics are combined with state character statistics such as state population and political partition. The overall data frame is shown in a table next to the heated map. Moreover, a bubble plot below comprehensively visualizes the data in the table. The purpose of the third tab is to enable the user to combine the information get from Twitter API with other basic statistics for further analysis.
+
+
+##Application 1##
+
+A user guide is described as below:
+
+Please notice that if any change is made in the input panel, the user needs to click the `Let's search !` button to update the information and show the analysis results. This can help prevent shiny from running automatically every time when the user is making any changes. This is realized by putting `eventReactive(input$go,...` before every related output part in the server.
+
+At first, a user can choose the number of tweets and the keyword that the app would need when grabbing data. The user can select the state that is of his or her interest and the number of top words s/he wants to see. If the user press `Let's search !` button now, only one table containing the top keyword-related words will be displayed with the ranks of the words and the word text. If the user has checked the checkbox `Show me City Tweet Trend !`, and chooses the city and the number of top words wanted in the `conditionalPanel` that is shown afterward, one more table will be shown below the `State Keyword related Hot Words` table. This new table is called `City Hot Tweets Trend`, where the user can track the most popular words of the city. We pull the list of cities with available trending keywords with `availableTrendLocations()`.
+The city trend table and the title of the table can be totally hidden by unchecking the `Show me City Tweet Trend !` button if the  user only wants to focus on the state data. 
+
+
+##Application 2##
+
+We first create a function `getSentiment` to grab percentages of sentiment from Datum Box according to a user entered input. The `getSentiment` function takes inputs of `text` and `key`, and returns a list of sentiment results. We also create a function `clean.text` to clean up and parse the texts we pull from Twitter. Function `clean text` takes inputs of `some_text`, scrapes unnecessary strings and returns an output of clean texts. Hence, when a user types a specific keyword in the box, `clean.text` pulls the tweets on the keyword set by the user, cleans up the tweets and finds sentiment of each word. As percentage of the sentiment of each word from Twitter are returned, we apply document term matrices in R to find the most frequent words appearing in the tweets with the keyword and a word cloud that includes sentiment information. To generate sentiment analysis by state, we apply the same approach to obtain word clouds from that state. This would allow us to compare the statewise sentiment with that of the nation of United States. 
+
+The outputs a user observes then consists of two world clouds. The world cloud on the top of the page includes word cloud from the nation of United States and the one at the bottom represents world cloud from the user selected state. The world cloud a user observes aggregates different levels of words frequencies with different sizes of words. Our word clouds clusters words by three levels of sentiment: positive, neutral and negative, and shows corresponding percentage of each cluster. In this way, a user can obtain more information of sentiment of a word compared to just read a regular word cloud. 
+
+As grabbing texts from Twitter becomes less efficient when size of the texts become large, we speed up our application using R package `foreach` and `parallel`. Particularly, `foreach` is used in a for-loop. An example is `foreach(...) %dopar%` replacing a regular for-loop, and `mclapply` from `parallel` substitues regular expression `lapply`. An example is `mclapply(...mc.cores=8)` replacing `lapply()`. We implement `mc.cores=8` in `mclapply( )`, as this allows a larger task to be broken into smaller tasks and doled out to separate 8 processors.
+
+One thing that is worth mentioning is that the number of times to use this API key has a limit. This implies that when a user has conducted too much sentiment analysis using the same API key, he or she needs to register for a new API key on the Datum Box website and replaces the old API key with the new one to continue using this application. We also provide a back up API key here if the old one expires: "e86d3246ade555b409caeb6d3c8b77fd".
+
+
+##Application 3##
+
+A user guide is described as below:
+
+
+In the third plot, two data visualization techniques are used for the display of the data grabbed from Twitter API and state population, and their party affliations. Remember to press "Let's search !" button after updating the content in the keyword search box and the number of tweets to get the expected output. You will see a heated map of the United States and a bubbleplot that will show a bunch of variables in our data. A table of the statistics of the whole data and the related variables is attached alongside the graphs. Here the graphs are both interactive. Statistics of different states will be displayed when mouse is moved on the elements of the graph.
+
+Honestly speaking, this third tab is the most likely place an error will occur. You may seen error message like "Error in Topnum[i] = round(Top$freq[which(Top$word == tolower(input$Keywd))]/SUMf: replacement has length zero" in the console. After hundreds of times of debugging, we find that the problem is not because of the code. This is due to another warning beforehead: "10 tweets were requested but the API can only return 0". That is to say, if there is no tweets grabbed from API, it is not hard to understand why replacement has length of zero. 
+
+This is truly due to the API control in twitter. Such weird thing may happen when we get the output perfectly today but error message the next day with code unchanged. Since we use a for-loop to grab certain amounts of tweets from all 50 states, the possible reasons might be: 1. too much traffic in a short period of time; 2. The keyword can not be sampled in some states.(notice that Twitter API only allows us to search for a very small portion of the whole database); 3. The search number is too small. 
+
+Right now we can test this part. We type in "apple" in the keyword input. Minutes ago there is a error message as we have shown you. Now we reload the second time with same code, same input "apple", and everything is perfect now. So if you cannot get the ideal output after several trials, please look at this screenshot for reference. (ss1.png and ss2.png in the repo)
+![](/Users/YY/Downloads/ss1.png)
+![](/Users/YY/Downloads/ss2.png)
+
+So let's move on to describe another feature of this application. In this part, we hope to compare difference of the same topic across difference states. In the interactive map graph at the top, the color represents percentage of number of keywords mentioned from the sample. This shows which state has the most discussion about the topic based on the tweets we iteratively grab. This map graph serves as a heated map that shows the extent of interest of the topic(keyword) in different states. You can check percentage of every state by moving mouse to the state on the map.
+
+This graph just shows the information we get from twitter API. For further reference, we also include variables like population and political parties. The detailed number can be observed from the attached table on the right side of the page. You will be able to check all the statistics of the states and statistics of the sampled API.(The total number of grabbed tweets is set to be at most 10 in this trial). These are based on the reactive named `state_topKey`, where after grabbing text from Twitter API, we turn the words to document term matrices and find the percentage.
+
+To show multidimensional data, we include bubbleplot as shown in the second picture. The plot is also interactive and it is actually a visualization of the table just mentioned on the top right of the page. Every bubble represents a state. The color of the bubbles represents the party partition. Red ones are the Democratic states and the blue ones are the Republican States. The size of the bubbles show percentage of the keyword. The x axis shows population of the state and the y axis means number of total valid tweets.
+
+By comparing the position of bubble in terms of y axis, we can learn which states are a little bit more "indifferent" of the topic. The size of the bubbles can show us which states are most interested in the keyword topic. Plus, these comparisons can be combined with the color of the bubble or the population of the state for further statistical inference.
+
+In terms of the code, with the first map, we use `searchTwitter` for all the states in the US. Thus there are 50 iterations. Within each interation, we do text mining by setting the content of all the tweets in the state to a document term matrix for word frequency check by using `Corpus` function. 
+
+In the output part, since we do not want to keep the app running when the user is entering contents, every output is related to the search button "Let's Search" by involving `eventReactive`. Every plot's options are set at the best display appearance.
+
+All in all, based on the number of tweets input and the keyword input, this tab can automatically present a beautiful and informative data visualization to analyze the popularity difference between states corresponding to different state characteristics.
